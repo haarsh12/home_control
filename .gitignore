@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.env
+
+# Temp files
+*.wav
+*.mp3
+
+# IDE
+.vscode/
+.idea/

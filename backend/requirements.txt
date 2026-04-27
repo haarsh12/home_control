@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+websockets
+httpx
+SpeechRecognition
+pydub
+gTTS
+google-genai
+python-multipart
+pyaudio
