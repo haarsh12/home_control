@@ -70,7 +70,7 @@ Return ONLY the JSON, no explanation."""
 
     try:
         response = client.models.generate_content(
-            model=config.CANDIDATE_MODELS[0],
+            model="gemini-1.5-flash",
             contents=prompt
         )
         
@@ -181,7 +181,7 @@ Translation:"""
 
     try:
         response = client.models.generate_content(
-            model=config.CANDIDATE_MODELS[0],
+            model="gemini-1.5-flash",
             contents=prompt
         )
         
