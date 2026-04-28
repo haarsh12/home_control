@@ -3,7 +3,7 @@ import os
 # FFMPEG_PATH must be set from config.py at startup
 FFMPEG_PATH = r"C:\Users\LOQ\Downloads\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin"
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBS_kF-cRdrzkxLJkfWHokQj6SoCCMLuzk")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyCy866Bzgsg7wXbCQBOJcB-J_hzKUPPQM0")
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
