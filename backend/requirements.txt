@@ -13,8 +13,8 @@ SpeechRecognition==3.10.4
 # AI/ML
 google-genai>=1.0.0
 
-# Data Validation
-pydantic==2.9.2
+# Data Validation - Use version with pre-built wheels
+pydantic>=2.0.0,<3.0.0
 
 # Note: TTS (gTTS, pydub) removed - text-only mode
 # Note: ffmpeg not required - no audio conversion needed
