@@ -5,7 +5,7 @@ import re
 client = genai.Client(api_key=config.GEMINI_API_KEY)
 
 def detect_relay_commands(user_text: str, ai_text: str):
-    """Detect relay commands from BOTH user's original STT text AND AI response text."""
+    """Detect relay commands from BOTH user's original STT text AND AI response text. answer in only short 15 words max and in latin script only dont use devnagri script also give answers to users general query """
     relay_commands = []
     
     # Combine both texts for detection
