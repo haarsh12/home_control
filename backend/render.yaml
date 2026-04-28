@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: smart-home-backend
+    env: python
+    region: singapore
+    plan: free
+    branch: main
+    buildCommand: "./build.sh"
+    startCommand: "uvicorn main:fastapi_app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PORT
+        value: 8000
+      - key: HOST
+        value: 0.0.0.0
+      - key: SAMPLE_RATE
+        value: 16000
+      - key: CHANNELS
+        value: 1
+      - key: SAMPLE_WIDTH
+        value: 2
+      - key: MAX_GEMINI_WORDS
+        value: 50
+    healthCheckPath: /health

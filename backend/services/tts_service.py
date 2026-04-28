@@ -1,33 +1,30 @@
-from gtts import gTTS
-from pydub import AudioSegment
-import io
-import wave
-import tempfile
-import os
-import config
+"""
+TTS Service - Text-only mode (no audio generation)
+Audio generation disabled to avoid ffmpeg dependency on Render.
+Only text will be sent to ESP32 LCD display.
+"""
+
+# TTS is disabled - text-only mode
+TTS_AVAILABLE = False
+TTS_ERROR_MESSAGE = "TTS disabled - text-only mode (no ffmpeg dependency)"
+
+print(f"[TTS] Text-only mode enabled - no audio generation")
 
 def text_to_wav_bytes(text: str) -> bytes:
-    try:
-        tts = gTTS(text=text, lang="hi")
-        mp3_buffer = io.BytesIO()
-        tts.write_to_fp(mp3_buffer)
-        mp3_buffer.seek(0)
+    """
+    Text-only mode - returns empty bytes.
+    ESP32 will only display text on LCD without audio playback.
+    """
+    print(f"[TTS] Text-only mode: {text}")
+    return b""
 
-        audio = AudioSegment.from_mp3(mp3_buffer)
-        audio = audio.set_frame_rate(config.SAMPLE_RATE)
-        audio = audio.set_channels(config.CHANNELS)
-        audio = audio.set_sample_width(config.SAMPLE_WIDTH)
+def is_tts_available() -> bool:
+    """Check if TTS is available"""
+    return TTS_AVAILABLE
 
-        temp_wav = tempfile.mktemp(suffix=".wav")
-        audio.export(temp_wav, format="wav")
-
-        with wave.open(temp_wav, 'rb') as wf:
-            pcm_data = wf.readframes(wf.getnframes())
-
-        os.remove(temp_wav)
-        
-        print(f"[TTS] byte count: {len(pcm_data)}")
-        return pcm_data
-    except Exception as e:
-        print(f"[ERROR] [TTS] Exception: {e}")
-        return b""
+def get_tts_status() -> dict:
+    """Get TTS status information"""
+    return {
+        "available": TTS_AVAILABLE,
+        "error": TTS_ERROR_MESSAGE
+    }

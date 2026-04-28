@@ -2,7 +2,19 @@ from google import genai
 import config
 import re
 
-client = genai.Client(api_key=config.GEMINI_API_KEY)
+# Initialize Gemini client only if API key is available
+GEMINI_AVAILABLE = bool(config.GEMINI_API_KEY)
+client = None
+
+if GEMINI_AVAILABLE:
+    try:
+        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        print("[GEMINI] Client initialized successfully")
+    except Exception as e:
+        print(f"[ERROR] [GEMINI] Failed to initialize: {e}")
+        GEMINI_AVAILABLE = False
+else:
+    print("[WARNING] [GEMINI] API key not set - AI responses disabled")
 
 def detect_relay_commands(user_text: str, ai_text: str):
     """Detect relay commands from BOTH user's original STT text AND AI response text. answer in only short 15 words max and in latin script only dont use devnagri script also give answers to users general query """
@@ -63,6 +75,12 @@ def detect_relay_commands(user_text: str, ai_text: str):
     return relay_commands
 
 def ask_gemini(user_text: str, sensor_data: dict, relay_state: dict):
+    if not GEMINI_AVAILABLE:
+        print("[GEMINI] API not available - using fallback response")
+        # Detect commands from user text only
+        relay_commands = detect_relay_commands(user_text, "")
+        return "Samajh gaya", relay_commands
+    
     light_status = "ON" if relay_state.get("light") else "OFF"
     fan_status = "ON" if relay_state.get("fan") else "OFF"
     
@@ -99,4 +117,6 @@ def ask_gemini(user_text: str, sensor_data: dict, relay_state: dict):
         except Exception as e:
             print(f"[ERROR] [GEMINI] Exception with model {model}: {e}")
 
-    return "Kuch gadbad ho gayi", []
+    # Fallback response
+    relay_commands = detect_relay_commands(user_text, "")
+    return "Kuch gadbad ho gayi", relay_commands

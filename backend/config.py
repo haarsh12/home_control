@@ -1,15 +1,27 @@
 import os
+from pathlib import Path
 
-# FFMPEG_PATH must be set from config.py at startup
-FFMPEG_PATH = r"C:\Users\LOQ\Downloads\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin"
+# Environment detection
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
+IS_PRODUCTION = ENVIRONMENT == "production"
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyCy866Bzgsg7wXbCQBOJcB-J_hzKUPPQM0")
+# FFMPEG Configuration - NOT USED (text-only mode)
+FFMPEG_PATH = ""
 
-SAMPLE_RATE = 16000
-CHANNELS = 1
-SAMPLE_WIDTH = 2
-MAX_GEMINI_WORDS = 50
-CANDIDATE_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"]
+# API Keys
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+if not GEMINI_API_KEY and not IS_PRODUCTION:
+    print("[WARNING] GEMINI_API_KEY not set! Voice assistant will not work.")
+
+# Audio Configuration (for STT only)
+SAMPLE_RATE = int(os.environ.get("SAMPLE_RATE", "16000"))
+CHANNELS = int(os.environ.get("CHANNELS", "1"))
+SAMPLE_WIDTH = int(os.environ.get("SAMPLE_WIDTH", "2"))
+
+# AI Configuration
+MAX_GEMINI_WORDS = int(os.environ.get("MAX_GEMINI_WORDS", "50"))
+CANDIDATE_MODELS = ["gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-1.5-flash"]
+
 SYSTEM_PROMPT = """
 You are a smart home assistant. STRICTLY follow these rules:
 1. Reply ONLY in Hinglish using LATIN SCRIPT (Roman alphabet). NEVER use Devanagari (Hindi script).
@@ -17,4 +29,16 @@ You are a smart home assistant. STRICTLY follow these rules:
 3. If the user asks to turn light/fan ON or OFF, you MUST include the exact English phrase "light on", "light off", "fan on", or "fan off" in your reply.
 4. Always be helpful and concise.
 """
-ESP32_SENSOR_URL = "http://192.168.105.42"
+
+# ESP32 Configuration
+# In production, ESP32 will connect to the deployed backend
+# In development, use local IP
+ESP32_SENSOR_URL = os.environ.get("ESP32_SENSOR_URL", "http://192.168.105.42")
+
+# Server Configuration
+PORT = int(os.environ.get("PORT", "8000"))
+HOST = os.environ.get("HOST", "0.0.0.0")
+
+# TTS Configuration
+TTS_ENABLED = False  # Disabled to avoid ffmpeg dependency
+print("[CONFIG] TTS disabled - text-only mode (no audio generation)")
