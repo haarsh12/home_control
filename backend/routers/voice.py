@@ -1,6 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import asyncio
-from services import stt_service, gemini_service, tts_service, relay_service
+from services import stt_service, gemini_service, tts_service, relay_service, laptop_service
+from routers import laptop
 import httpx
 import config
 
@@ -84,6 +85,42 @@ async def voice_websocket(websocket: WebSocket):
                             continue
                         
                         print(f"[WS] Transcribed: {user_text}")
+                        
+                        # Check if this is a laptop command
+                        laptop_command = laptop_service.parse_laptop_command(user_text)
+                        
+                        if laptop_command:
+                            print(f"[WS] Detected laptop command: {laptop_command}")
+                            
+                            # Send command to connected laptops
+                            sent = await laptop.send_command_to_laptops(laptop_command)
+                            
+                            if sent:
+                                # Acknowledge to user
+                                ai_text = "Okay, opening on laptop"
+                                if laptop_command["action"] == "open_youtube":
+                                    ai_text = f"Playing {laptop_command.get('query', 'video')} on laptop"
+                                elif laptop_command["action"] == "google_search":
+                                    ai_text = f"Searching {laptop_command.get('query', 'that')} on laptop"
+                                elif laptop_command["action"] == "open_app":
+                                    ai_text = f"Opening {laptop_command.get('app', 'app')} on laptop"
+                                
+                                print(f"[WS] Laptop command sent: {ai_text}")
+                            else:
+                                ai_text = "No laptop connected"
+                                print("[WS] No laptop connected to execute command")
+                            
+                            # Send response to ESP32
+                            if not await safe_send_text(f"LCD:{ai_text}"):
+                                print("[ERROR] [WS] Failed to send LCD text, connection lost")
+                                connection_active = False
+                                break
+                            
+                            state = "IDLE"
+                            continue
+                        
+                        # Not a laptop command, proceed with normal flow
+                        print("[WS] Not a laptop command, processing normally")
                         
                         # Get sensor and relay data
                         sensor_data = relay_service.get_sensor_data()

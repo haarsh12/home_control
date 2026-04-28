@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 import uvicorn
 import socket
 
-from routers import voice, sensors, app
+from routers import voice, sensors, app, laptop
 
 # Create FastAPI app
 fastapi_app = FastAPI(
@@ -32,6 +32,7 @@ fastapi_app.add_middleware(
 fastapi_app.include_router(voice.router, tags=["Voice Assistant"])
 fastapi_app.include_router(sensors.router, tags=["Sensors & Relays"])
 fastapi_app.include_router(app.router, tags=["App API"])
+fastapi_app.include_router(laptop.router, tags=["Laptop Control"])
 
 # Root endpoint
 @fastapi_app.get("/")
@@ -47,7 +48,9 @@ async def root():
             "sensors": "/api/sensor/data",
             "relay_control": "/api/device/control",
             "voice_ws": "/ws/voice",
-            "relay_ws": "/ws/relay"
+            "relay_ws": "/ws/relay",
+            "laptop_ws": "/ws/laptop",
+            "laptop_status": "/laptop/status"
         }
     }
 
