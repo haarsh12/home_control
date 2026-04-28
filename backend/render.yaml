@@ -11,7 +11,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.11.9
       - key: GEMINI_API_KEY
         sync: false
       - key: PORT
