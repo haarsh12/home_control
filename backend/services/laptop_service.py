@@ -68,36 +68,44 @@ Examples:
 
 Return ONLY the JSON, no explanation."""
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt
-        )
-        
-        response_text = response.text.strip()
-        print(f"[LAPTOP_SERVICE] Gemini response: {response_text}")
-        
-        # Extract JSON from response
-        import json
-        
-        # Try to find JSON in the response
-        json_match = re.search(r'\{[^}]+\}', response_text)
-        if json_match:
-            command = json.loads(json_match.group())
+    # Try multiple models until one works
+    for model_name in config.CANDIDATE_MODELS:
+        try:
+            print(f"[LAPTOP_SERVICE] Trying model: {model_name}")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt
+            )
             
-            # Check if it's a valid laptop command
-            if command.get("action") == "none":
-                return None
+            response_text = response.text.strip()
+            print(f"[LAPTOP_SERVICE] Model {model_name} response: {response_text}")
             
-            if command.get("action") in ["open_youtube", "google_search", "open_url", "open_app", "play_music"]:
-                print(f"[LAPTOP_SERVICE] Parsed command: {command}")
-                return command
-        
-        return None
-        
-    except Exception as e:
-        print(f"[ERROR] [LAPTOP_SERVICE] Gemini parsing failed: {e}")
-        return _fallback_parse(user_text)
+            # Extract JSON from response
+            import json
+            
+            # Try to find JSON in the response
+            json_match = re.search(r'\{[^}]+\}', response_text)
+            if json_match:
+                command = json.loads(json_match.group())
+                
+                # Check if it's a valid laptop command
+                if command.get("action") == "none":
+                    return None
+                
+                if command.get("action") in ["open_youtube", "google_search", "open_url", "open_app", "play_music"]:
+                    print(f"[LAPTOP_SERVICE] Successfully parsed with {model_name}: {command}")
+                    return command
+            
+            # If we get here, the response wasn't valid JSON, try next model
+            print(f"[LAPTOP_SERVICE] Model {model_name} didn't return valid JSON, trying next model")
+            
+        except Exception as e:
+            print(f"[LAPTOP_SERVICE] Model {model_name} failed: {e}")
+            continue  # Try next model
+    
+    # All models failed, use fallback parser
+    print("[LAPTOP_SERVICE] All Gemini models failed, using fallback parser")
+    return _fallback_parse(user_text)
 
 
 def _fallback_parse(user_text: str) -> Optional[Dict[str, Any]]:
@@ -111,6 +119,8 @@ def _fallback_parse(user_text: str) -> Optional[Dict[str, Any]]:
         r'(?:play|bajao)\s+(.+?)\s+(?:on\s+)?(?:youtube|yt)',
         r'youtube\s+(?:pe|par|open\s+karke)\s+(.+)',
         r'play\s+(.+)',
+        r'(.+?)\s+(?:song|gaana|gana)\s+(?:bajao|play|chalao)',
+        r'(.+?)\s+(?:video|song)\s+(?:play\s+karo|bajao)',
     ]
     
     for pattern in youtube_patterns:
@@ -118,34 +128,38 @@ def _fallback_parse(user_text: str) -> Optional[Dict[str, Any]]:
         if match:
             query = match.group(1).strip()
             # Remove common filler words
-            query = re.sub(r'\b(song|video|music|gaana|gana)\b', '', query).strip()
-            if query:
+            query = re.sub(r'\b(song|video|music|gaana|gana|pe|par|on|the)\b', '', query).strip()
+            if query and len(query) > 1:
                 return {"action": "open_youtube", "query": query}
     
     # Google search patterns
     google_patterns = [
         r'google\s+(?:pe|par|mein|me)\s+(.+?)\s+(?:search\s+karo|dhundo)',
         r'(?:search|dhundo)\s+(.+?)\s+(?:on\s+)?google',
-        r'google\s+(.+)',
+        r'google\s+(?:search\s+)?(.+)',
+        r'(?:search|find|dhundo)\s+(.+)',
     ]
     
     for pattern in google_patterns:
         match = re.search(pattern, text_lower)
         if match:
             query = match.group(1).strip()
-            return {"action": "google_search", "query": query}
+            # Skip if it's clearly not a search query
+            if query and len(query) > 1 and query not in ['youtube', 'yt', 'play', 'bajao']:
+                return {"action": "google_search", "query": query}
     
     # App open patterns
     app_patterns = [
-        r'(.+?)\s+(?:app\s+)?(?:kholo|open\s+karo|chalu\s+karo)',
-        r'(?:open|launch|start)\s+(.+)',
+        r'(.+?)\s+(?:app\s+)?(?:kholo|open\s+karo|chalu\s+karo|start\s+karo)',
+        r'(?:open|launch|start|kholo)\s+(.+?)\s*(?:app)?',
     ]
     
     for pattern in app_patterns:
         match = re.search(pattern, text_lower)
         if match:
             app = match.group(1).strip()
-            if app not in ['youtube', 'google']:
+            # Skip if it's clearly not an app name
+            if app and len(app) > 1 and app not in ['youtube', 'google', 'search', 'play', 'bajao']:
                 return {"action": "open_app", "app": app}
     
     # Website patterns
@@ -155,6 +169,16 @@ def _fallback_parse(user_text: str) -> Optional[Dict[str, Any]]:
         if match:
             site = match.group(1).strip()
             return {"action": "open_url", "url": f"https://www.google.com/search?q={site}"}
+    
+    # If contains play/bajao but not caught above, assume YouTube
+    if any(word in text_lower for word in ['play', 'bajao', 'chalao']) and 'youtube' not in text_lower:
+        # Extract the main content
+        query = text_lower
+        for word in ['play', 'bajao', 'chalao', 'song', 'gaana', 'video', 'karo', 'pe', 'par']:
+            query = query.replace(word, ' ')
+        query = ' '.join(query.split()).strip()
+        if query and len(query) > 1:
+            return {"action": "open_youtube", "query": query}
     
     return None
 
@@ -179,19 +203,26 @@ Text: "{text}"
 
 Translation:"""
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt
-        )
-        
-        translation = response.text.strip()
-        print(f"[LAPTOP_SERVICE] Translated '{text}' → '{translation}'")
-        return translation
-        
-    except Exception as e:
-        print(f"[ERROR] [LAPTOP_SERVICE] Translation failed: {e}")
-        return text
+    # Try multiple models until one works
+    for model_name in config.CANDIDATE_MODELS:
+        try:
+            print(f"[LAPTOP_SERVICE] Trying translation with model: {model_name}")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt
+            )
+            
+            translation = response.text.strip()
+            print(f"[LAPTOP_SERVICE] Model {model_name} translated '{text}' → '{translation}'")
+            return translation
+            
+        except Exception as e:
+            print(f"[LAPTOP_SERVICE] Translation model {model_name} failed: {e}")
+            continue  # Try next model
+    
+    # All models failed, return original text
+    print(f"[LAPTOP_SERVICE] All translation models failed, returning original text")
+    return text
 
 
 def is_laptop_command(user_text: str) -> bool:

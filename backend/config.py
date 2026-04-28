@@ -20,7 +20,17 @@ SAMPLE_WIDTH = int(os.environ.get("SAMPLE_WIDTH", "2"))
 
 # AI Configuration
 MAX_GEMINI_WORDS = int(os.environ.get("MAX_GEMINI_WORDS", "50"))
-CANDIDATE_MODELS = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]
+# Multiple model fallbacks - try in order until one works
+CANDIDATE_MODELS = [
+    "gemini-1.5-flash",          # Fast and reliable
+    "gemini-1.5-pro",            # More capable
+    "gemini-1.0-pro",            # Stable fallback
+    "models/gemini-1.5-flash",   # With models/ prefix
+    "models/gemini-1.5-pro",     # With models/ prefix
+    "models/gemini-1.0-pro",     # With models/ prefix
+    "gemini-pro",                # Legacy name
+    "gemini-flash-latest",       # Latest alias
+]
 
 SYSTEM_PROMPT = """
 You are a smart home assistant. STRICTLY follow these rules:

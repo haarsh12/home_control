@@ -92,6 +92,7 @@ def ask_gemini(user_text: str, sensor_data: dict, relay_state: dict):
                f"Light is {light_status}, Fan is {fan_status}.")
     prompt = f"{config.SYSTEM_PROMPT}\n\nContext:\n{context}\n\nUser: {user_text}"
 
+    # Try multiple models until one works
     for model in config.CANDIDATE_MODELS:
         try:
             print(f"[GEMINI] Trying model: {model}")
@@ -111,12 +112,15 @@ def ask_gemini(user_text: str, sensor_data: dict, relay_state: dict):
             if len(words) > config.MAX_GEMINI_WORDS:
                 response_text = " ".join(words[:config.MAX_GEMINI_WORDS])
                 
-            print(f"[MODEL] {model}")
+            print(f"[GEMINI] SUCCESS with model: {model}")
             print(f"[RESPONSE] {response_text}")
             return response_text, relay_commands
+            
         except Exception as e:
-            print(f"[ERROR] [GEMINI] Exception with model {model}: {e}")
+            print(f"[GEMINI] Model {model} failed: {e}")
+            continue  # Try next model
 
-    # Fallback response
+    # All models failed - use fallback response
+    print("[GEMINI] All models failed - using fallback response")
     relay_commands = detect_relay_commands(user_text, "")
     return "Kuch gadbad ho gayi", relay_commands
