@@ -5,9 +5,6 @@ from pathlib import Path
 ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
 IS_PRODUCTION = ENVIRONMENT == "production"
 
-# FFMPEG Configuration - NOT USED (text-only mode)
-FFMPEG_PATH = ""
-
 # API Keys
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 if not GEMINI_API_KEY and not IS_PRODUCTION:
@@ -31,14 +28,8 @@ You are a smart home assistant. STRICTLY follow these rules:
 """
 
 # ESP32 Configuration
-# In production, ESP32 will connect to the deployed backend
-# In development, use local IP
 ESP32_SENSOR_URL = os.environ.get("ESP32_SENSOR_URL", "http://192.168.105.42")
 
 # Server Configuration
 PORT = int(os.environ.get("PORT", "8000"))
 HOST = os.environ.get("HOST", "0.0.0.0")
-
-# TTS Configuration
-TTS_ENABLED = False  # Disabled to avoid ffmpeg dependency
-print("[CONFIG] TTS disabled - text-only mode (no audio generation)")

@@ -13,7 +13,7 @@ from routers import voice, sensors, app
 # Create FastAPI app
 fastapi_app = FastAPI(
     title="Smart Home Backend API",
-    description="Backend API for ESP32 Smart Home with Voice Assistant (Text-only mode)",
+    description="Backend API for ESP32 Smart Home with Voice Assistant",
     version="1.0.0",
     docs_url="/docs" if not config.IS_PRODUCTION else None,
     redoc_url="/redoc" if not config.IS_PRODUCTION else None,
@@ -40,7 +40,6 @@ async def root():
         "status": "online",
         "service": "Smart Home Backend API",
         "version": "1.0.0",
-        "mode": "text-only",
         "environment": config.ENVIRONMENT,
         "endpoints": {
             "health": "/health",
@@ -53,21 +52,12 @@ async def root():
 
 @fastapi_app.on_event("startup")
 async def startup_event():
-    from services import tts_service
-    
     print("=" * 60)
     print("[STARTUP] Smart Home Backend API Starting...")
     print("=" * 60)
     print(f"[CONFIG] Environment: {config.ENVIRONMENT}")
-    print(f"[CONFIG] Mode: TEXT-ONLY (no audio generation)")
     print(f"[CONFIG] Gemini API Key: {'✓ Set' if config.GEMINI_API_KEY else '✗ Missing'}")
-    print(f"[CONFIG] Sample Rate: {config.SAMPLE_RATE}Hz (STT only)")
     print(f"[CONFIG] ESP32 URL: {config.ESP32_SENSOR_URL}")
-    
-    # TTS status
-    tts_status = tts_service.get_tts_status()
-    print(f"[CONFIG] TTS (Audio): ✗ Disabled (text-only mode)")
-    print(f"[CONFIG] Output: LCD text only, no audio playback")
     
     # Get server IP
     try:
@@ -81,7 +71,7 @@ async def startup_event():
     print(f"[NETWORK] Local IP: {ip}")
     print(f"[NETWORK] Port: {config.PORT}")
     print("=" * 60)
-    print("[STARTUP] Backend ready! (Text-only mode)")
+    print("[STARTUP] Backend ready!")
     print("=" * 60)
 
 @fastapi_app.on_event("shutdown")
