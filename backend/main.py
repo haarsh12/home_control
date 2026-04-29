@@ -59,6 +59,18 @@ async def startup_event():
     print(f"[CONFIG] Gemini API Key: {'✓ Set' if config.GEMINI_API_KEY else '✗ Missing'}")
     print(f"[CONFIG] ESP32 URL: {config.ESP32_SENSOR_URL}")
     
+    # Check available Gemini models
+    if config.GEMINI_API_KEY:
+        from services import gemini_service
+        try:
+            available_models = gemini_service.list_available_models()
+            if available_models:
+                print(f"[CONFIG] Gemini Models: {len(available_models)} available")
+            else:
+                print("[WARNING] No Gemini models available - check API key and quota")
+        except Exception as e:
+            print(f"[WARNING] Failed to check Gemini models: {e}")
+    
     # Get server IP
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

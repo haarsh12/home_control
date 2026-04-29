@@ -17,7 +17,6 @@ SAMPLE_WIDTH = int(os.environ.get("SAMPLE_WIDTH", "2"))
 
 # AI Configuration
 MAX_GEMINI_WORDS = int(os.environ.get("MAX_GEMINI_WORDS", "50"))
-CANDIDATE_MODELS = ["gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-1.5-flash"]
 
 SYSTEM_PROMPT = """
 You are a smart home assistant. STRICTLY follow these rules:
