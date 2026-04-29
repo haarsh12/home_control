@@ -36,19 +36,10 @@ async def send_relay_command(device: str, state: bool):
         except Exception as e:
             print(f"[ERROR] [RELAY] WS Send failed: {e}")
 
-    # HTTP fallback to ESP32 #2's existing HTTP server (old firmware)
+    # Skip HTTP fallback in production (Render can't reach local ESP32)
     if not ws_sent:
-        print(f"[RELAY] No WS clients, using HTTP fallback to ESP32 #2")
-        state_str = "on" if state else "off"
-        url = f"{config.ESP32_SENSOR_URL}/{device}/{state_str}"
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as http_client:
-                response = await http_client.get(url)
-                print(f"[RELAY] HTTP fallback -> GET {url} -> {response.status_code}: {response.text}")
-        except httpx.ConnectError:
-            print(f"[ERROR] [RELAY] HTTP fallback failed: Cannot connect to ESP32 #2 at {url}")
-        except Exception as e:
-            print(f"[ERROR] [RELAY] HTTP fallback failed: {e}")
+        print(f"[RELAY] No WS clients connected - ESP32 #2 relay not available")
+        print(f"[RELAY] To fix: Upload WebSocket-enabled code to ESP32 #2")
 
 # ==========================================
 # NEW BACKEND ENDPOINTS
